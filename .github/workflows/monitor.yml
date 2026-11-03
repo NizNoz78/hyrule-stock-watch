@@ -17,8 +17,8 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
-         
+          node-version: 22
+         cache: npm
       - run: npm install
       - run: npx playwright install --with-deps chromium
       - name: Check retailer stock and send qualifying alerts
