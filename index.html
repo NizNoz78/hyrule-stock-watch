@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Hyrule Stock Watch — Zelda 40th Anniversary</title>
+<style>
+:root{--bg:#101812;--panel:#19251c;--line:#344633;--gold:#e9c76a;--muted:#a9b5a6;--green:#8fce8d;--red:#e68c7b}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 70% 0,#293a26 0,var(--bg) 45%);color:#f5f2e8;font:16px/1.5 system-ui,-apple-system,Segoe UI,sans-serif}
+main{max-width:980px;margin:0 auto;padding:38px 20px 60px}.eyebrow{color:var(--gold);letter-spacing:.18em;text-transform:uppercase;font-size:12px;font-weight:800}
+h1{font-family:Georgia,serif;font-size:clamp(34px,6vw,58px);line-height:1.04;margin:10px 0 8px}h1 span{color:var(--gold)}.sub{color:var(--muted);max-width:650px}
+.hero{display:grid;grid-template-columns:1.25fr .75fr;gap:18px;margin:28px 0}
+.card{background:linear-gradient(145deg,#202e22,#172019);border:1px solid var(--line);border-radius:18px;padding:22px;box-shadow:0 18px 45px #0003}
+.price{font: bold 34px Georgia,serif;color:var(--gold)}.small{font-size:13px;color:var(--muted)}
+.status{display:inline-flex;align-items:center;gap:8px;border-radius:99px;padding:7px 12px;background:#2b382b;color:#c9d5c5;font-size:13px;font-weight:700}
+.dot{width:8px;height:8px;border-radius:50%;background:#9ba99a}.dot.good{background:var(--green);box-shadow:0 0 12px #8fce8d88}.dot.bad{background:var(--red)}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:16px}
+.retailer{background:#111a14;border:1px solid var(--line);border-radius:13px;padding:16px}.retailer h3{margin:0 0 7px;font-size:17px}.retailer a{color:var(--gold);font-size:13px;text-decoration:none}.retailer a:hover{text-decoration:underline}
+.meta{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-top:10px}.state{font-weight:700;font-size:13px}.state.good{color:var(--green)}.state.bad{color:var(--red)}
+footer{margin-top:22px;color:var(--muted);font-size:12px}.notice{border-left:3px solid var(--gold);padding:10px 14px;background:#222d21;border-radius:0 10px 10px 0;color:#d8dfd2;font-size:13px;margin-top:18px}
+@media(max-width:700px){.hero{grid-template-columns:1fr}.grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body><main>
+<div class="eyebrow">A Hyrule restock lookout</div>
+<h1>Hyrule <span>Stock Watch</span></h1>
+<p class="sub">Watching Canadian retailers for the Nintendo Switch 2 — The Legend of Zelda — 40th Anniversary Edition. Only direct-retailer offers at or below the official Canadian reference price count.</p>
+<section class="hero">
+  <div class="card">
+    <div class="small">TARGET PRODUCT</div>
+    <h2 style="font:24px Georgia,serif;margin:7px 0 12px">Nintendo Switch 2<br>— Zelda 40th Anniversary Edition</h2>
+    <div class="price">$709.99 CAD</div>
+    <div class="small">Maximum qualifying item price · before tax/shipping</div>
+    <div style="margin-top:17px"><span class="status"><span class="dot" id="overallDot"></span><span id="overall">Loading retailer checks…</span></span></div>
+  </div>
+  <div class="card">
+    <div class="small">LAST CHECK</div>
+    <div id="checked" style="font:22px Georgia,serif;margin:7px 0 18px">—</div>
+    <div class="small">AUTOMATIC CHECKS</div>
+    <div style="font:22px Georgia,serif;margin:7px 0">Every 5 minutes*</div>
+    <div class="small">Email alert on a newly verified qualifying restock.</div>
+  </div>
+</section>
+<div class="eyebrow">Canadian retailers</div>
+<div class="grid" id="retailers">
+  <div class="retailer"><h3>Nintendo Canada</h3><div class="small">Awaiting first check…</div></div>
+  <div class="retailer"><h3>Best Buy Canada</h3><div class="small">Awaiting first check…</div></div>
+  <div class="retailer"><h3>Canada Computers</h3><div class="small">Awaiting first check…</div></div>
+  <div class="retailer"><h3>Amazon Canada</h3><div class="small">Awaiting first check…</div></div>
+  <div class="retailer"><h3>Walmart Canada</h3><div class="small">Awaiting first check…</div></div>
+</div>
+<div class="notice">A listing only qualifies when the page appears to match the anniversary console, shows an item price of $709.99 CAD or less, and is sold by the retailer itself—not a third-party Marketplace seller. Retailer pages can change their layout, so a check may occasionally be marked “Needs review” rather than guessed.</div>
+<footer>*GitHub Actions scheduled runs are best-effort; checks may be delayed. This dashboard refreshes its status file when the monitoring workflow runs. It does not reserve stock.</footer>
+</main>
+<script>
+const names = ["Nintendo Canada","Best Buy Canada","Amazon Canada","Walmart Canada"];
+const links = [
+"https://www.nintendo.com/en-ca/store/hardware/",
+"https://www.bestbuy.ca/en-ca/product/nintendo-switch-2-console-the-legend-of-zelda-40th-anniversary-edition/20149861",
+"https://www.amazon.ca/s?k=Nintendo+Switch+2+Zelda+40th+Anniversary+Edition",
+"https://www.walmart.ca/search?q=Nintendo%20Switch%202%20Zelda%2040th%20Anniversary%20Edition"
+];
+function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+async function load(){
+ try{
+  const r=await fetch("./status.json?ts="+Date.now(),{cache:"no-store"});
+  if(!r.ok)throw new Error("No status file yet");
+  const d=await r.json(); const rows=d.retailers||[];
+  const available=rows.filter(x=>x.status==="IN_STOCK");
+  document.getElementById("overall").textContent=available.length?`${available.length} qualifying retailer${available.length===1?"":"s"} found`:"No verified qualifying stock yet";
+  document.getElementById("overallDot").className="dot "+(available.length?"good":"");
+  document.getElementById("checked").textContent=d.checkedAt?new Date(d.checkedAt).toLocaleString():"—";
+  document.getElementById("retailers").innerHTML=names.map((n,i)=>{
+   const x=rows.find(y=>y.name===n)||{status:"UNKNOWN",detail:"Waiting for a successful check"};
+   const good=x.status==="IN_STOCK", bad=x.status==="OUT_OF_STOCK";
+   const label=good?"IN STOCK":bad?"OUT OF STOCK":x.status==="REVIEW"?"NEEDS REVIEW":"CHECK PENDING";
+   return `<article class="retailer"><h3>${esc(n)}</h3><div class="small">${esc(x.detail||"")}</div><div class="meta"><span class="state ${good?"good":bad?"bad":""}">${label}</span><a href="${links[i]}" target="_blank" rel="noopener">Open retailer ↗</a></div></article>`;
+  }).join("");
+ }catch(e){document.getElementById("overall").textContent="Waiting for first automated check";document.getElementById("checked").textContent="Not checked yet"}
+}
+load();setInterval(load,60000);
+</script></body></html>

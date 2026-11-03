@@ -1,0 +1,35 @@
+{
+  "checkedAt": null,
+  "referencePrice": 709.99,
+  "currency": "CAD",
+  "retailers": [
+    {
+      "name": "Nintendo Canada",
+      "status": "UNKNOWN",
+      "price": null,
+      "detail": "No automated check has run yet.",
+      "url": "https://www.nintendo.com/en-ca/store/hardware/"
+    },
+    {
+      "name": "Best Buy Canada",
+      "status": "UNKNOWN",
+      "price": null,
+      "detail": "No automated check has run yet.",
+      "url": "https://www.bestbuy.ca/en-ca/product/nintendo-switch-2-console-the-legend-of-zelda-40th-anniversary-edition/20149861"
+    },
+    {
+      "name": "Amazon Canada",
+      "status": "UNKNOWN",
+      "price": null,
+      "detail": "No automated check has run yet.",
+      "url": "https://www.amazon.ca/s?k=Nintendo+Switch+2+Zelda+40th+Anniversary+Edition"
+    },
+    {
+      "name": "Walmart Canada",
+      "status": "UNKNOWN",
+      "price": null,
+      "detail": "No automated check has run yet.",
+      "url": "https://www.walmart.ca/search?q=Nintendo%20Switch%202%20Zelda%2040th%20Anniversary%20Edition"
+    }
+  ]
+}

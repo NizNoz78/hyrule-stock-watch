@@ -1,0 +1,11 @@
+{
+  "name": "hyrule-stock-watch",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "check": "node monitor.mjs"
+  },
+  "dependencies": {
+    "playwright": "^1.56.0"
+  }
+}
