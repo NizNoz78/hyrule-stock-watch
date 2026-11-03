@@ -1,34 +1,34 @@
 {
-  "checkedAt": null,
+  "checkedAt": "2026-11-03T22:31:42.758Z",
   "referencePrice": 709.99,
   "currency": "CAD",
   "retailers": [
     {
       "name": "Nintendo Canada",
-      "status": "UNKNOWN",
-      "price": null,
-      "detail": "No automated check has run yet.",
+      "status": "OUT_OF_STOCK",
+      "price": 679.99,
+      "detail": "Retailer page reports sold out.",
       "url": "https://www.nintendo.com/en-ca/store/hardware/"
     },
     {
       "name": "Best Buy Canada",
-      "status": "UNKNOWN",
-      "price": null,
-      "detail": "No automated check has run yet.",
+      "status": "IN_STOCK",
+      "price": 709.99,
+      "detail": "Retailer page indicates stock at $709.99 CAD.",
       "url": "https://www.bestbuy.ca/en-ca/product/nintendo-switch-2-console-the-legend-of-zelda-40th-anniversary-edition/20149861"
     },
     {
       "name": "Amazon Canada",
-      "status": "UNKNOWN",
-      "price": null,
-      "detail": "No automated check has run yet.",
+      "status": "REVIEW",
+      "price": 1199.97,
+      "detail": "Seller could not be verified as the retailer itself; Marketplace offers excluded.",
       "url": "https://www.amazon.ca/s?k=Nintendo+Switch+2+Zelda+40th+Anniversary+Edition"
     },
     {
       "name": "Walmart Canada",
-      "status": "UNKNOWN",
+      "status": "REVIEW",
       "price": null,
-      "detail": "No automated check has run yet.",
+      "detail": "Could not confidently identify the exact anniversary console listing.",
       "url": "https://www.walmart.ca/search?q=Nintendo%20Switch%202%20Zelda%2040th%20Anniversary%20Edition"
     }
   ]
