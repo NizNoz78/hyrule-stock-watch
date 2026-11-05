@@ -1,5 +1,5 @@
 {
-  "checkedAt": "2026-11-05T11:07:00.209Z",
+  "checkedAt": "2026-11-05T23:52:07.096Z",
   "referencePrice": 709.99,
   "currency": "CAD",
   "retailers": [
@@ -20,7 +20,7 @@
     {
       "name": "Amazon Canada",
       "status": "REVIEW",
-      "price": 1209.89,
+      "price": 679.96,
       "detail": "Seller could not be verified as the retailer itself; Marketplace offers excluded.",
       "url": "https://www.amazon.ca/s?k=Nintendo+Switch+2+Zelda+40th+Anniversary+Edition"
     },
