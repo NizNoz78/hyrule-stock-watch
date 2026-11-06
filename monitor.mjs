@@ -1,72 +1,12 @@
 import { chromium } from "playwright";
-import fs from "node:fs/promises";
-
-const LIMIT = 709.99;
-const TARGET = /Nintendo Switch.{0,30}2.{0,80}Legend of Zelda.{0,30}40th Anniversary Edition/i;
-const retailers = [
-  {name:"Nintendo Canada", url:"https://www.nintendo.com/en-ca/store/hardware/", kind:"nintendo"},
-  {name:"Best Buy Canada", url:"https://www.bestbuy.ca/en-ca/product/nintendo-switch-2-console-the-legend-of-zelda-40th-anniversary-edition/20149861", kind:"bestbuy"},
-  {name:"Amazon Canada", url:"https://www.amazon.ca/s?k=Nintendo+Switch+2+Zelda+40th+Anniversary+Edition", kind:"amazon"},
-  {name:"Walmart Canada", url:"https://www.walmart.ca/search?q=Nintendo%20Switch%202%20Zelda%2040th%20Anniversary%20Edition", kind:"walmart"}
-];
-
-function parsePrice(text) {
-  const vals = [...text.matchAll(/\$\s?([\d,]+\.\d{2})/g)].map(m=>Number(m[1].replace(",","")));
-  return vals.find(v=>v>100 && v<3000) ?? null;
-}
-function availability(text, kind) {
-  const t=text.toLowerCase();
-  if (/sold out|out of stock|currently unavailable|unavailable online|not available online/.test(t)) return "OUT_OF_STOCK";
-  if (kind==="bestbuy" && /add to cart|add to bag/.test(t)) return "IN_STOCK";
-  if (kind==="nintendo" && /add to cart|add to bag|buy now/.test(t)) return "IN_STOCK";
-  if (kind==="amazon" && /add to cart|in stock|ships from and sold by amazon\.ca/.test(t)) return "IN_STOCK";
-  if (kind==="walmart" && /add to cart|in stock/.test(t)) return "IN_STOCK";
-  if (/add to cart|add to basket|in stock/.test(t)) return "IN_STOCK";
-  return "REVIEW";
-}
-async function check(browser, retailer) {
-  const page=await browser.newPage({locale:"en-CA"});
-  try {
-    await page.goto(retailer.url,{waitUntil:"domcontentloaded",timeout:45000});
-    await page.waitForTimeout(3500);
-    const title=await page.title();
-    const body=(await page.locator("body").innerText({timeout:10000})).slice(0,120000);
-    const matching=TARGET.test(title+" "+body) || retailer.kind==="nintendo" && /40th Anniversary Edition/.test(body);
-    if(!matching) return {name:retailer.name,status:"REVIEW",price:null,detail:"Could not confidently identify the exact anniversary console listing.",url:retailer.url};
-    const marker=body.search(/40th Anniversary Edition/i);
-    const productContext=marker>=0 ? body.slice(Math.max(0,marker-900),Math.min(body.length,marker+1800)) : body;
-    const price=parsePrice(productContext);
-    let sellerOk=true;
-    if(retailer.kind==="bestbuy") sellerOk=/sold and shipped by best buy/i.test(body);
-    if(retailer.kind==="amazon") sellerOk=/ships from and sold by amazon\.ca/i.test(body);
-    if(retailer.kind==="walmart") sellerOk=/sold and shipped by walmart/i.test(body);
-    if(!sellerOk) return {name:retailer.name,status:"REVIEW",price,detail:"Seller could not be verified as the retailer itself; Marketplace offers excluded.",url:retailer.url};
-    if(price===null || price>LIMIT) return {name:retailer.name,status:"REVIEW",price,detail:price===null?"Could not verify the item price.":"Price is above the $709.99 CAD limit.",url:retailer.url};
-    const stock=availability(body,retailer.kind);
-    return {name:retailer.name,status:stock,price,detail:stock==="IN_STOCK"?`Retailer page indicates stock at $${price.toFixed(2)} CAD.`:stock==="OUT_OF_STOCK"?"Retailer page reports sold out.":"Availability wording needs manual review.",url:retailer.url};
-  } catch(e) {
-    return {name:retailer.name,status:"REVIEW",price:null,detail:"Retailer page could not be checked: "+String(e.message).slice(0,100),url:retailer.url};
-  } finally { await page.close(); }
-}
-const browser=await chromium.launch({headless:true});
-const results=[];
-for(const r of retailers) results.push(await check(browser,r));
-await browser.close();
-
-const path="status.json";
-let previous={retailers:[]};
-try { previous=JSON.parse(await fs.readFile(path,"utf8")); } catch {}
-const old=new Map((previous.retailers||[]).map(x=>[x.name,x.status]));
-const newlyInStock=results.filter(x=>x.status==="IN_STOCK" && old.get(x.name)!=="IN_STOCK");
-const output={checkedAt:new Date().toISOString(),referencePrice:LIMIT,currency:"CAD",retailers:results};
-await fs.writeFile(path,JSON.stringify(output,null,2)+"\n");
-
-if(newlyInStock.length && process.env.RESEND_API_KEY && process.env.ALERT_EMAIL && process.env.FROM_EMAIL) {
-  const lines=newlyInStock.map(x=>`${x.name}: $${x.price.toFixed(2)} CAD\n${x.url}`).join("\n\n");
-  const response=await fetch("https://api.resend.com/emails",{
-    method:"POST",headers:{"Authorization":`Bearer ${process.env.RESEND_API_KEY}`,"Content-Type":"application/json"},
-    body:JSON.stringify({from:process.env.FROM_EMAIL,to:[process.env.ALERT_EMAIL],subject:"Zelda 40th Anniversary Switch 2 — qualifying stock found!",text:`A qualifying retailer listing was detected:\n\n${lines}\n\nReference price: $709.99 CAD. Check the retailer page immediately; stock can disappear quickly.`})
-  });
-  if(!response.ok) throw new Error("Email send failed: "+await response.text());
-}
-console.log(JSON.stringify(output,null,2));
+const { SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, RESEND_API_KEY, ALERT_EMAIL, FROM_EMAIL } = process.env;
+if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) throw new Error("Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY GitHub secrets.");
+const headers={apikey:SUPABASE_SERVICE_ROLE_KEY,Authorization:`Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,"Content-Type":"application/json"};
+async function api(path,opts={}){const r=await fetch(`${SUPABASE_URL}/rest/v1/${path}`,{...opts,headers:{...headers,...opts.headers}});if(!r.ok)throw new Error(`Supabase ${r.status}: ${await r.text()}`);return r.status===204?null:r.json()}
+const products=await api('products?enabled=eq.true&select=*');const retailers=await api('retailers?enabled=eq.true&select=*');
+function priceIn(text){const a=[...text.matchAll(/\$\s?([\d,]+\.\d{2})/g)].map(m=>Number(m[1].replace(/,/g,'')));return a.find(x=>x>20&&x<10000)??null}
+function stock(text,kind){const t=text.toLowerCase();if(/sold out|out of stock|currently unavailable|unavailable online|not available online/.test(t))return 'OUT_OF_STOCK';if(/add to cart|add to bag|add to basket|in stock|buy now/.test(t))return 'IN_STOCK';return 'REVIEW'}
+async function check(browser,p,r){const page=await browser.newPage({locale:'en-CA'});try{await page.goto(r.url,{waitUntil:'domcontentloaded',timeout:45000});await page.waitForTimeout(2500);const title=await page.title();const body=(await page.locator('body').innerText({timeout:10000})).slice(0,100000);if(!p.keywords.toLowerCase().split(/\s+/).filter(x=>x.length>3).some(k=>(title+' '+body).toLowerCase().includes(k)))return {status:'REVIEW',price:null,detail:'Could not confidently match the product keywords.'};const idx=body.toLowerCase().indexOf(p.keywords.toLowerCase().split(/\s+/).slice(-3).join(' '));const context=idx>=0?body.slice(Math.max(0,idx-700),idx+1800):body;const price=priceIn(context);if(p.ignore_marketplace){const sellerKnown=/sold and shipped by|ships from and sold by/i.test(body);const sellerOk=r.kind==='amazon'?/ships from and sold by amazon\.ca/i.test(body):r.kind==='bestbuy'?/sold and shipped by best buy/i.test(body):r.kind==='walmart'?/sold and shipped by walmart/i.test(body):r.kind==='nintendo'?true:/sold and shipped by [^\n]+/i.test(body);if(sellerKnown&&!sellerOk)return {status:'REVIEW',price,detail:'Third-party seller detected; excluded.'};if(['amazon','bestbuy','walmart'].includes(r.kind)&&!sellerOk)return {status:'REVIEW',price,detail:'Could not verify the retailer as seller; Marketplace offers excluded.'};}
+if(price===null||price>Number(p.max_price))return {status:'REVIEW',price,detail:price===null?'Could not verify item price.':`Price exceeds your ${p.currency} ${Number(p.max_price).toFixed(2)} limit.`};const status=stock(body,r.kind);return {status,price,detail:status==='IN_STOCK'?`Page indicates stock at ${p.currency} ${price.toFixed(2)}.`:status==='OUT_OF_STOCK'?'Retailer page reports sold out.':'Availability wording needs manual review.'};}catch(e){return {status:'REVIEW',price:null,detail:'Page check failed: '+String(e.message).slice(0,120)}}finally{await page.close()}}
+const browser=await chromium.launch({headless:true});const output=[];try{for(const p of products){for(const r of retailers.filter(x=>x.product_id===p.id)){const result=await check(browser,p,r);const old=await api(`stock_state?product_id=eq.${p.id}&retailer_id=eq.${r.id}&select=status`);const was=old?.[0]?.status;const row={product_id:p.id,retailer_id:r.id,status:result.status,price:result.price,detail:result.detail,checked_at:new Date().toISOString()};await api('stock_state?on_conflict=product_id,retailer_id',{method:'POST',headers:{Prefer:'resolution=merge-duplicates,return=minimal'},body:JSON.stringify(row)});output.push({product:p.name,retailer:r.name,url:r.url,...result,checkedAt:row.checked_at});if(result.status==='IN_STOCK'&&was!=='IN_STOCK'&&RESEND_API_KEY&&FROM_EMAIL&&(p.alert_email||ALERT_EMAIL)){const to=p.alert_email||ALERT_EMAIL;const resp=await fetch('https://api.resend.com/emails',{method:'POST',headers:{Authorization:`Bearer ${RESEND_API_KEY}`,'Content-Type':'application/json'},body:JSON.stringify({from:FROM_EMAIL,to:[to],subject:`Stock alert: ${p.name}`,text:`A qualifying listing was detected.\n\nProduct: ${p.name}\nRetailer: ${r.name}\nPrice: ${p.currency} ${result.price.toFixed(2)}\n${r.url}\n\nPlease verify availability immediately; stock can disappear quickly.`})});if(!resp.ok)throw new Error('Email send failed: '+await resp.text())}}}}finally{await browser.close()}
+console.log(JSON.stringify({checkedAt:new Date().toISOString(),results:output},null,2));
