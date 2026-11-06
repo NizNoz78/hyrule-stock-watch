@@ -1,0 +1,36 @@
+name: Check configured product stock
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "*/5 * * * *"
+permissions:
+  contents: write
+concurrency:
+  group: stock-watch-monitor
+  cancel-in-progress: true
+jobs:
+  monitor:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install
+      - run: npx playwright install --with-deps chromium
+      - name: Check configured products and send alerts
+        run: npm run check
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          ALERT_EMAIL: ${{ secrets.ALERT_EMAIL }}
+          FROM_EMAIL: ${{ secrets.FROM_EMAIL }}
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+      - name: Upload dashboard
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+      - name: Publish dashboard
+        uses: actions/deploy-pages@v4
