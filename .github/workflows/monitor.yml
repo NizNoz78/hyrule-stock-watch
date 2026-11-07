@@ -4,7 +4,10 @@ on:
   schedule:
     - cron: "*/5 * * * *"
 permissions:
-  contents: write
+  
+  contents: read
+  pages: write
+  id-token: write
 concurrency:
   group: stock-watch-monitor
   cancel-in-progress: true
