@@ -2,7 +2,20 @@ import { chromium } from "playwright";
 const { SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, RESEND_API_KEY, ALERT_EMAIL, FROM_EMAIL } = process.env;
 if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) throw new Error("Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY GitHub secrets.");
 const headers={apikey:SUPABASE_SERVICE_ROLE_KEY,Authorization:`Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,"Content-Type":"application/json"};
-async function api(path,opts={}){const r=await fetch(`${SUPABASE_URL}/rest/v1/${path}`,{...opts,headers:{...headers,...opts.headers}});if(!r.ok)throw new Error(`Supabase ${r.status}: ${await r.text()}`);return r.status===204?null:r.json()}
+async function api(path, opts = {}) {
+  const r = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, {
+    ...opts,
+    headers: { ...headers, ...opts.headers }
+  });
+
+  const body = await r.text();
+
+  if (!r.ok) {
+    throw new Error(`Supabase ${r.status}: ${body}`);
+  }
+
+  return body ? JSON.parse(body) : null;
+}
 const products=await api('products?enabled=eq.true&select=*');const retailers=await api('retailers?enabled=eq.true&select=*');
 function priceIn(text){const a=[...text.matchAll(/\$\s?([\d,]+\.\d{2})/g)].map(m=>Number(m[1].replace(/,/g,'')));return a.find(x=>x>20&&x<10000)??null}
 function stock(text,kind){const t=text.toLowerCase();if(/sold out|out of stock|currently unavailable|unavailable online|not available online/.test(t))return 'OUT_OF_STOCK';if(/add to cart|add to bag|add to basket|in stock|buy now/.test(t))return 'IN_STOCK';return 'REVIEW'}
