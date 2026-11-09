@@ -18,9 +18,32 @@ async function api(path, opts = {}) {
 }
 const products=await api('products?enabled=eq.true&select=*');const retailers=await api('retailers?enabled=eq.true&select=*');
 function priceIn(text){const a=[...text.matchAll(/\$\s?([\d,]+\.\d{2})/g)].map(m=>Number(m[1].replace(/,/g,'')));return a.find(x=>x>20&&x<10000)??null}
-function stock(text,kind){const t=text.toLowerCase();if(/sold out|out of stock|currently unavailable|unavailable online|not available online/.test(t))return 'OUT_OF_STOCK';if(/add to cart|add to bag|add to basket|in stock|buy now/.test(t))return 'IN_STOCK';return 'REVIEW'}
+function stock(text, kind) {
+  const t = text.toLowerCase();
+
+  const unavailable =
+    /sold out|out of stock|currently unavailable|unavailable online|not available online|not available for pickup|coming soon/.test(t);
+
+  if (unavailable) return 'OUT_OF_STOCK';
+
+  // Avoid treating general promotional wording as proof of stock.
+  if (kind === 'bestbuy') {
+    return 'REVIEW';
+  }
+
+  const available =
+    /add to cart|add to bag|add to basket|in stock/.test(t);
+
+  if (available) return 'IN_STOCK';
+
+  return 'REVIEW';
+}
 async function check(browser,p,r){const page=await browser.newPage({locale:'en-CA'});try{await page.goto(r.url,{waitUntil:'domcontentloaded',timeout:45000});await page.waitForTimeout(2500);const title=await page.title();const body=(await page.locator('body').innerText({timeout:10000})).slice(0,100000);
-                                                                                         const titleText = title.toLowerCase();
+                                                                                         .normalize('NFKD')
+  .toLowerCase()
+  .replace(/[™®©]/g, '')
+  .replace(/[^a-z0-9]+/g, ' ')
+  .trim();
 
 const productMatch =
   /nintendo switch 2/.test(titleText) &&
