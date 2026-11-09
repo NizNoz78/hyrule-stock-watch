@@ -38,7 +38,10 @@ function stock(text, kind) {
 
   return 'REVIEW';
 }
-async function check(browser,p,r){const page=await browser.newPage({locale:'en-CA'});try{await page.goto(r.url,{waitUntil:'domcontentloaded',timeout:45000});await page.waitForTimeout(2500);const title=await page.title();const body=(await page.locator('body').innerText({timeout:10000})).slice(0,100000);
+async function check(browser,p,r){const page=await browser.newPage({locale:'en-CA'});try{await page.goto(r.url,{waitUntil:'domcontentloaded',timeout:45000});await page.waitForTimeout(2500);
+                                                                                         const pageTitle = await page.title();
+const heading = await page.locator('h1').first().innerText().catch(() => '');
+const title = `${pageTitle} ${heading}`;;const body=(await page.locator('body').innerText({timeout:10000})).slice(0,100000);
 const titleText = title
                                                                                          .normalize('NFKD')
   .toLowerCase()
