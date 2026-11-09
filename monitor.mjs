@@ -61,7 +61,7 @@ if (!productMatch || excludedProduct) {
   return {
     status: 'REVIEW',
     price: null,
-    detail: 'Product title does not confidently match the Zelda 40th Anniversary console.'
+    detail: `Product title check failed. Page title: "${pageTitle}". Product heading: "${heading}".`
   };
 }
                                                                                          const idx=body.toLowerCase().indexOf(p.keywords.toLowerCase().split(/\s+/).slice(-3).join(' '));const context=idx>=0?body.slice(Math.max(0,idx-700),idx+1800):body;const price=priceIn(context);if(p.ignore_marketplace){const sellerKnown=/sold and shipped by|ships from and sold by/i.test(body);const sellerOk=r.kind==='amazon'?/ships from and sold by amazon\.ca/i.test(body):r.kind==='bestbuy'?/sold and shipped by best buy/i.test(body):r.kind==='walmart'?/sold and shipped by walmart/i.test(body):r.kind==='nintendo'?true:/sold and shipped by [^\n]+/i.test(body);if(sellerKnown&&!sellerOk)return {status:'REVIEW',price,detail:'Third-party seller detected; excluded.'};if(['amazon','bestbuy','walmart'].includes(r.kind)&&!sellerOk)return {status:'REVIEW',price,detail:'Could not verify the retailer as seller; Marketplace offers excluded.'};}
