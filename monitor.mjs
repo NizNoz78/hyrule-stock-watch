@@ -43,7 +43,7 @@ async function check(browser,p,r){const page=await browser.newPage({locale:'en-C
 const heading = await page.locator('h1').first().innerText().catch(() => '');
 const title = `${pageTitle} ${heading}`;;const body=(await page.locator('body').innerText({timeout:10000})).slice(0,100000);
 const titleText = title
-                                                                                         .normalize('NFKD')
+                                                                                          .normalize('NFKD')
   .toLowerCase()
   .replace(/[™®©]/g, '')
   .replace(/[^a-z0-9]+/g, ' ')
