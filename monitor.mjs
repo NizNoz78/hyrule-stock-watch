@@ -43,10 +43,6 @@ async function check(browser,p,r){const page=await browser.newPage({locale:'en-C
                                     await page.goto(r.url,{waitUntil:'domcontentloaded',timeout:45000});
                                     await page.waitForTimeout(5000);
 
-console.log('DEBUG RETAILER:', r.name);
-console.log('DEBUG URL:', page.url());
-console.log('DEBUG TITLE:', await page.title());
-console.log('DEBUG BODY:', (await page.locator('body').innerText().catch(() => '')).slice(0, 1500));
                                                                                          await page.waitForTimeout(2500);
                                                                                          const pageTitle = await page.title();
 const heading = await page.locator('h1').first().innerText().catch(() => '');
