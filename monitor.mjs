@@ -46,7 +46,19 @@ async function check(browser,p,r){const page=await browser.newPage({locale:'en-C
                                                                                          await page.waitForTimeout(2500);
                                                                                          const pageTitle = await page.title();
 const heading = await page.locator('h1').first().innerText().catch(() => '');
-const title = `${pageTitle} ${heading}`;;const body=(await page.locator('body').innerText({timeout:10000})).slice(0,100000);
+const title = `${pageTitle} ${heading}`;;
+                                    const body=(await page.locator('body').innerText({timeout:10000})).slice(0,100000);
+                                    const pageText = `${title} ${heading} ${body}`.toLowerCase();
+
+if (
+  /just a moment|verify you are human|checking your browser|attention required|access denied|forbidden/.test(pageText)
+) {
+  return {
+    status: 'REVIEW',
+    price: null,
+    detail: 'Retailer is blocking automated access. Availability could not be checked.'
+  };
+}
 const titleText = `${pageTitle} ${heading}`
   .replace(/[™®©]/g, '')
   .normalize('NFKD')
