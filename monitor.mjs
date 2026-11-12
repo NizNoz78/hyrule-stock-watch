@@ -51,12 +51,12 @@ const title = `${pageTitle} ${heading}`;;
                                     const pageText = `${title} ${heading} ${body}`.toLowerCase();
 
 if (
-  /just a moment|verify you are human|checking your browser|attention required|access denied|forbidden/.test(pageText)
+  /just a moment|verify you are human|checking your browser|attention required|access denied|forbidden|something went wrong|quelque chose s est mal passe/.test(pageText)
 ) {
   return {
     status: 'REVIEW',
     price: null,
-    detail: 'Retailer is blocking automated access. Availability could not be checked.'
+    detail: 'Retailer returned an error or access-blocked page. Availability could not be checked.'
   };
 }
 const titleText = `${pageTitle} ${heading}`
